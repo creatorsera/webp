@@ -6,6 +6,7 @@
     <title>Image Converter</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://apis.google.com/js/api.js"></script>
     <style>
         .dragging { border: 2px dashed #007bff; background-color: #f0f8ff; }
@@ -28,7 +29,7 @@
         
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-5" id="image-container"></div>
         
-        <button id="batch-download" class="hidden mt-4 bg-green-500 text-white px-4 py-2 rounded">Download All as ZIP</button>
+        <button id="batch-download" class="hidden mt-4 bg-green-500 text-white px-4 py-2 rounded" onclick="downloadAll()">Download All as ZIP</button>
         <button id="save-to-drive" class="hidden mt-4 bg-blue-600 text-white px-4 py-2 rounded">Save to Google Drive</button>
     </div>
     <canvas id="canvas" class="hidden"></canvas>
@@ -98,6 +99,23 @@
                     a.click();
                 };
             }, 'image/webp', parseFloat(qualitySlider.value));
+        }
+
+        function downloadAll() {
+            if (imagesToDownload.length === 0) return;
+            const zip = new JSZip();
+            let count = 0;
+            imagesToDownload.forEach(image => {
+                fetch(image.url).then(res => res.blob()).then(blob => {
+                    zip.file(image.fileName, blob);
+                    count++;
+                    if (count === imagesToDownload.length) {
+                        zip.generateAsync({ type: 'blob' }).then(content => {
+                            saveAs(content, 'converted_images.zip');
+                        });
+                    }
+                });
+            });
         }
     </script>
 </body>
